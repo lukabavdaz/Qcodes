@@ -3,6 +3,7 @@ from distutils.version import StrictVersion
 from importlib import import_module
 import re
 
+
 def get_version(verbose=1):
     """ Extract version information from source code """
 
@@ -24,10 +25,12 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+
 extras = {
-    'MatPlot': ('matplotlib', '1.5'),
+    'MatPlot': ('matplotlib', '2.2.3'),
     'QtPlot': ('pyqtgraph', '0.10.0'),
-    'coverage tests': ('coverage', '4.0')
+    'coverage tests': ('coverage', '4.0'),
+    'Slack': ('slacker', '0.9.42')
 }
 extras_require = {k: '>='.join(v) for k, v in extras.items()}
 
@@ -35,8 +38,8 @@ setup(name='qcodes',
       version=get_version(),
       use_2to3=False,
 
-      maintainer='Giulio Ungaretti',
-      maintainer_email='unga@nbi.ku.dk',
+      maintainer='Jens H Nielsen',
+      maintainer_email='Jens.Nielsen@microsoft.com',
       description='Python-based data acquisition framework developed by the '
                   'Copenhagen / Delft / Sydney / Microsoft quantum computing '
                   'consortium',
@@ -46,21 +49,25 @@ setup(name='qcodes',
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'Programming Language :: Python :: 3 :: Only',
-          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
           'Topic :: Scientific/Engineering'
       ],
       license='MIT',
       # if we want to install without tests:
       # packages=find_packages(exclude=["*.tests", "tests"]),
       packages=find_packages(),
-      package_data={'qcodes': ['widgets/*.js', 'widgets/*.css', 'config/*.json']},
-      install_requires= [
+      package_data={'qcodes': ['monitor/dist/*', 'monitor/dist/js/*',
+                               'monitor/dist/css/*', 'config/*.json',
+                               'instrument/sims/*.yaml',
+                               'tests/dataset/fixtures/2018-01-17/*/*']},
+      install_requires=[
           'numpy>=1.10',
-          'pyvisa>=1.8',
-          'ipython>=4.1.0',
-          'ipykernel!=4.6.0', # https://github.com/ipython/ipykernel/issues/240 in 4.6
-          'jupyter>=1.0.0',
-          'h5py>=2.6'
+          'pyvisa>=1.9.1',
+          'h5py>=2.6',
+          'websockets>=3.2',
+          'jsonschema',
+          'pyzmq',
+          'wrapt'
       ],
 
       test_suite='qcodes.tests',
@@ -96,6 +103,13 @@ valueerror_template = '''
 *****
 '''
 
+othererror_template = '''
+*****
+***** could not import package {0}. Please try importing it from 
+***** the commandline to diagnose the issue.
+*****
+'''
+
 # now test the versions of extras
 for extra, (module_name, min_version) in extras.items():
     try:
@@ -107,3 +121,5 @@ for extra, (module_name, min_version) in extras.items():
     except ValueError:
         print(valueerror_template.format(
             module_name, module.__version__, min_version, extra))
+    except:
+        print(othererror_template.format(module_name))
